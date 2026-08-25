@@ -8,7 +8,7 @@ const program = new Command();
 
 program
   .name('mermaid2img')
-  .description('将 Markdown 中的 mermaid 代码块替换为渲染后的 SVG 图片')
+  .description('将 Markdown 中的 mermaid 代码块渲染为 SVG 图片（原文件保持不变）')
   .version('0.1.0')
   .argument('<patterns...>', 'Markdown 文件路径或 glob 模式（如 "docs/**/*.md"）')
   .option('-o, --output <dir>', '图片输出目录（默认：每个 md 文件旁的 images/ 目录）')
@@ -31,7 +31,7 @@ program
         });
         total += result.count;
         console.log(
-          `${file}: ${result.count > 0 ? `已转换 ${result.count} 个图表` : '未发现 mermaid 代码块'}`,
+          `${file}: ${result.count > 0 ? `已生成 ${result.count} 张图片` : '未发现 mermaid 代码块'}`,
         );
       } catch (err) {
         failed += 1;
@@ -39,7 +39,7 @@ program
         process.exitCode = 1;
       }
     }
-    console.log(`完成：共转换 ${total} 个图表${failed > 0 ? `，${failed} 个文件失败` : ''}。`);
+    console.log(`完成：共生成 ${total} 张图片${failed > 0 ? `，${failed} 个文件失败` : ''}。`);
   });
 
 program.parseAsync();

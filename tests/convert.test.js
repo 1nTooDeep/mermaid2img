@@ -18,7 +18,7 @@ afterEach(async () => {
 const MD = ['# 流程', '', '```mermaid', 'flowchart LR\n    A[开始] --> B[结束]', '```', '', '尾行'].join('\n');
 
 describe('convertFile', () => {
-  it('端到端：写 SVG 到 images/ 并替换代码块', async () => {
+  it('端到端：写 SVG 到 images/，原 Markdown 保持不变', async () => {
     const mdPath = path.join(dir, 'README.md');
     await writeFile(mdPath, MD, 'utf8');
 
@@ -27,9 +27,7 @@ describe('convertFile', () => {
     expect(result.count).toBe(1);
     const svg = await readFile(path.join(dir, 'images', 'diagram-1.svg'), 'utf8');
     expect(svg).toContain('<svg');
-    const after = await readFile(mdPath, 'utf8');
-    expect(after).toBe(['# 流程', '', '![diagram-1](./images/diagram-1.svg)', '', '尾行'].join('\n'));
-    expect(after).not.toContain('```mermaid');
+    expect(await readFile(mdPath, 'utf8')).toBe(MD);
   });
 
   it('无 mermaid 块时为 no-op，文件内容不变', async () => {
@@ -41,20 +39,20 @@ describe('convertFile', () => {
     expect(await readFile(mdPath, 'utf8')).toBe('# 只有文字\n');
   });
 
-  it('--prefix 改变文件名与 alt 文本', async () => {
+  it('--prefix 改变图片文件名', async () => {
     const mdPath = path.join(dir, 'README.md');
     await writeFile(mdPath, MD, 'utf8');
     await convertFile(mdPath, { prefix: '架构' });
     await expect(readFile(path.join(dir, 'images', '架构-1.svg'), 'utf8')).resolves.toContain('<svg');
-    expect(await readFile(mdPath, 'utf8')).toContain('![架构-1](./images/架构-1.svg)');
+    expect(await readFile(mdPath, 'utf8')).toBe(MD);
   });
 
-  it('--outputDir 指定目录时图片写往该目录、链接指向该目录', async () => {
+  it('--outputDir 指定目录时图片写往该目录', async () => {
     const mdPath = path.join(dir, 'README.md');
     await writeFile(mdPath, MD, 'utf8');
     await convertFile(mdPath, { outputDir: path.join(dir, 'assets') });
     await expect(readFile(path.join(dir, 'assets', 'diagram-1.svg'), 'utf8')).resolves.toContain('<svg');
-    expect(await readFile(mdPath, 'utf8')).toContain('![diagram-1](./assets/diagram-1.svg)');
+    expect(await readFile(mdPath, 'utf8')).toBe(MD);
   });
 
   it('多个块依次编号', async () => {
@@ -67,9 +65,7 @@ describe('convertFile', () => {
       path.join(dir, 'images', 'diagram-1.svg'),
       path.join(dir, 'images', 'diagram-2.svg'),
     ]);
-    const after = await readFile(mdPath, 'utf8');
-    expect(after).toContain('![diagram-1](./images/diagram-1.svg)');
-    expect(after).toContain('![diagram-2](./images/diagram-2.svg)');
+    expect(await readFile(mdPath, 'utf8')).toBe(two);
   });
 
   it('渲染失败时抛出错误，md 与磁盘均保持不变', async () => {

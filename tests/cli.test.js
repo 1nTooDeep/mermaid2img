@@ -22,17 +22,18 @@ afterEach(async () => {
 const MD = ['# 流程', '', '```mermaid', 'flowchart LR\n    A[开始] --> B[结束]', '```'].join('\n');
 
 describe('mermaid2img CLI', () => {
-  it('端到端冒烟：转换 fixture 文件并输出进度', async () => {
+  it('端到端冒烟：生成图片、原 Markdown 保持不变', async () => {
     const mdPath = path.join(dir, 'README.md');
     await writeFile(mdPath, MD, 'utf8');
 
     const { stdout } = await execFileAsync('node', [CLI, mdPath]);
 
     expect(stdout).toContain('README.md');
-    expect(stdout).toContain('1 个图表');
+    expect(stdout).toContain('1 张图片');
     expect(stdout).toContain('完成');
-    const after = await readFile(mdPath, 'utf8');
-    expect(after).toContain('![diagram-1](./images/diagram-1.svg)');
+    const svg = await readFile(path.join(dir, 'images', 'diagram-1.svg'), 'utf8');
+    expect(svg).toContain('<svg');
+    expect(await readFile(mdPath, 'utf8')).toBe(MD);
   });
 
   it('无匹配文件时以退出码 1 失败并提示', async () => {

@@ -1,21 +1,12 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { extractMermaidBlocks } from './extract.js';
-import { replaceBlocks } from './replace.js';
 import { renderToSvg } from './render.js';
 
-/** 生成从 Markdown 文件指向图片文件、以 ./ 开头的 POSIX 风格相对路径 */
-function relativeImagePath(mdPath, imagePath) {
-  const rel = path
-    .relative(path.dirname(path.resolve(mdPath)), path.resolve(imagePath))
-    .split(path.sep)
-    .join('/');
-  return rel.startsWith('.') ? rel : `./${rel}`;
-}
-
 /**
- * 转换单个 Markdown 文件：提取 mermaid 块 → 渲染 SVG → 写入图片目录 → 用图片引用替换原代码块。
- * 所有渲染成功之前不写任何文件；渲染失败直接抛出，原文件与磁盘保持不变。
+ * 转换单个 Markdown 文件：提取 mermaid 块 → 渲染 SVG → 写入图片目录。
+ * 原文件不做任何修改（mermaid 代码块原样保留，便于继续编辑）。
+ * 所有渲染成功之前不写任何文件；渲染失败直接抛出，磁盘保持不变。
  *
  * @param {string} mdPath Markdown 文件路径
  * @param {{outputDir?: string, prefix?: string}} options
@@ -37,20 +28,12 @@ export async function convertFile(mdPath, options = {}) {
   const imagesDir = options.outputDir
     ? path.resolve(options.outputDir)
     : path.join(mdDir, 'images');
-  const plans = blocks.map((_, idx) => {
-    const name = `${prefix}-${idx + 1}.svg`;
-    const file = path.join(imagesDir, name);
-    return {
-      file,
-      svg: svgs[idx],
-      link: `![${prefix}-${idx + 1}](${relativeImagePath(mdPath, file)})`,
-    };
-  });
-
-  const newMarkdown = replaceBlocks(markdown, blocks, (_, idx) => plans[idx].link);
+  const plans = blocks.map((_, idx) => ({
+    file: path.join(imagesDir, `${prefix}-${idx + 1}.svg`),
+    svg: svgs[idx],
+  }));
 
   await mkdir(imagesDir, { recursive: true });
   await Promise.all(plans.map((p) => writeFile(p.file, p.svg, 'utf8')));
-  await writeFile(mdPath, newMarkdown, 'utf8');
   return { file: mdPath, count: blocks.length, images: plans.map((p) => p.file) };
 }

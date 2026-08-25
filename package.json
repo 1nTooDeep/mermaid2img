@@ -1,0 +1,26 @@
+{
+  "name": "mermaid2img",
+  "version": "0.1.0",
+  "description": "Replace mermaid code blocks in Markdown with rendered SVG images",
+  "type": "module",
+  "bin": {
+    "mermaid2img": "bin/cli.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "commander": "^15.0.0",
+    "fast-glob": "^3.3.3",
+    "isomorphic-mermaid": "^0.1.1"
+  },
+  "overrides": {
+    "mermaid": "11.12.1"
+  },
+  "devDependencies": {
+    "vitest": "^4.1.11"
+  }
+}

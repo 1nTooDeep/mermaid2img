@@ -25,7 +25,7 @@ describe('convertFile', () => {
     const result = await convertFile(mdPath);
 
     expect(result.count).toBe(1);
-    const svg = await readFile(path.join(dir, 'images', 'diagram-1.svg'), 'utf8');
+    const svg = await readFile(path.join(dir, 'images', 'README', 'diagram-1.svg'), 'utf8');
     expect(svg).toContain('<svg');
     expect(await readFile(mdPath, 'utf8')).toBe(MD);
   });
@@ -43,7 +43,7 @@ describe('convertFile', () => {
     const mdPath = path.join(dir, 'README.md');
     await writeFile(mdPath, MD, 'utf8');
     await convertFile(mdPath, { prefix: '架构' });
-    await expect(readFile(path.join(dir, 'images', '架构-1.svg'), 'utf8')).resolves.toContain('<svg');
+    await expect(readFile(path.join(dir, 'images', 'README', '架构-1.svg'), 'utf8')).resolves.toContain('<svg');
     expect(await readFile(mdPath, 'utf8')).toBe(MD);
   });
 
@@ -51,7 +51,7 @@ describe('convertFile', () => {
     const mdPath = path.join(dir, 'README.md');
     await writeFile(mdPath, MD, 'utf8');
     await convertFile(mdPath, { outputDir: path.join(dir, 'assets') });
-    await expect(readFile(path.join(dir, 'assets', 'diagram-1.svg'), 'utf8')).resolves.toContain('<svg');
+    await expect(readFile(path.join(dir, 'assets', 'README', 'diagram-1.svg'), 'utf8')).resolves.toContain('<svg');
     expect(await readFile(mdPath, 'utf8')).toBe(MD);
   });
 
@@ -62,10 +62,21 @@ describe('convertFile', () => {
     const result = await convertFile(mdPath);
     expect(result.count).toBe(2);
     expect(result.images).toEqual([
-      path.join(dir, 'images', 'diagram-1.svg'),
-      path.join(dir, 'images', 'diagram-2.svg'),
+      path.join(dir, 'images', 'README', 'diagram-1.svg'),
+      path.join(dir, 'images', 'README', 'diagram-2.svg'),
     ]);
     expect(await readFile(mdPath, 'utf8')).toBe(two);
+  });
+
+  it('同目录多个 md 文件的图片互不覆盖', async () => {
+    const a = path.join(dir, 'a.md');
+    const b = path.join(dir, 'b.md');
+    await writeFile(a, MD, 'utf8');
+    await writeFile(b, MD, 'utf8');
+    await convertFile(a);
+    await convertFile(b);
+    await expect(readFile(path.join(dir, 'images', 'a', 'diagram-1.svg'), 'utf8')).resolves.toContain('<svg');
+    await expect(readFile(path.join(dir, 'images', 'b', 'diagram-1.svg'), 'utf8')).resolves.toContain('<svg');
   });
 
   it('渲染失败时抛出错误，md 与磁盘均保持不变', async () => {

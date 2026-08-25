@@ -10,7 +10,8 @@ import { renderToSvg } from './render.js';
  *
  * @param {string} mdPath Markdown 文件路径
  * @param {{outputDir?: string, prefix?: string}} options
- *        outputDir：图片输出目录（相对路径基于 process.cwd()）；缺省为 md 同级 images/
+ *        outputDir：图片输出目录（相对路径基于 process.cwd()），图片写入其下以 md 文件名命名的子目录；
+ *        缺省为 md 同级 images/<md 文件名>/
  *        prefix：图片文件名前缀，缺省 'diagram'
  * @returns {Promise<{file: string, count: number, images: string[]}>}
  */
@@ -25,9 +26,10 @@ export async function convertFile(mdPath, options = {}) {
   const svgs = await renderToSvg(blocks.map((b) => b.code));
 
   const mdDir = path.dirname(mdPath);
+  const mdStem = path.basename(mdPath, path.extname(mdPath));
   const imagesDir = options.outputDir
-    ? path.resolve(options.outputDir)
-    : path.join(mdDir, 'images');
+    ? path.resolve(options.outputDir, mdStem)
+    : path.join(mdDir, 'images', mdStem);
   const plans = blocks.map((_, idx) => ({
     file: path.join(imagesDir, `${prefix}-${idx + 1}.svg`),
     svg: svgs[idx],

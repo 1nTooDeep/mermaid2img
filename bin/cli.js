@@ -42,4 +42,7 @@ program
     console.log(`完成：共生成 ${total} 张图片${failed > 0 ? `，${failed} 个文件失败` : ''}。`);
   });
 
-program.parseAsync();
+program.parseAsync().catch((err) => {
+  console.error(`错误：${err?.message ?? err}`);
+  process.exitCode = 1;
+});

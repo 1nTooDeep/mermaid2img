@@ -48,6 +48,13 @@ mermaid2img README.md -p arch         # 自定义文件名前缀 → arch-1.svg
   全局 `CSSStyleSheet` 缺失而崩溃（`isomorphic-mermaid@0.1.1` 尚未适配）。升级前先在
   无浏览器环境验证渲染。
 - svgdom 的文字宽度为近似计算，与浏览器渲染存在细微尺寸差异。
+- **部分图型在无浏览器环境不可用**（依赖 svgdom/jsdom 未实现的 DOM/canvas API，实测
+  于 mermaid 11.12.1）：`gantt`（缺 `offsetWidth`）、`mindmap`（缺 `canvas.getContext`）、
+  `sankey-beta`（缺 `compareDocumentPosition`）、`block-beta`（DOM 循环结构序列化崩溃）。
+  其余常见图型（flowchart / sequence / class / state / er / journey / pie / timeline /
+  quadrant / gitGraph / requirement 等）实测可渲染。
+- `quadrantChart` 与 `requirementDiagram` 的文本值不接受中文（mermaid lexer 限制），
+  需用英文文本；flowchart / sequence 等主流图型的中文标签正常。
 - 仅识别反引号围栏（\`\`\`mermaid）；CommonMark 的波浪线围栏（\~\~\~mermaid）不支持。
 - glob 默认不匹配隐藏目录：`.github/**/*.md` 等不会被 `**/*.md` 命中。
 

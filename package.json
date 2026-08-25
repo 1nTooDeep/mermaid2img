@@ -13,6 +13,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@resvg/resvg-js": "^2.6.2",
     "commander": "^15.0.0",
     "fast-glob": "^3.3.3",
     "isomorphic-mermaid": "^0.1.1"

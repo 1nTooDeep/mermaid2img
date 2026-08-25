@@ -15,22 +15,55 @@ function ensureInitialized() {
 }
 
 /**
+ * 渲染单个 mermaid 源码为 SVG 字符串（含主题）。
+ * @param {string} code mermaid 源码
+ * @param {{theme?: 'default' | 'dark' | 'forest' | 'neutral'}} options
+ * @returns {Promise<string>} SVG 字符串
+ */
+async function renderOne(code, { theme = 'default' } = {}) {
+  counter += 1;
+  mermaid.initialize({ startOnLoad: false, theme });
+  const { svg } = await mermaid.render(`m2i-${counter}`, code);
+  return svg;
+}
+
+/**
  * 批量渲染 mermaid 源码为 SVG 字符串。
  * @param {string[]} diagrams
+ * @param {{theme?: 'default' | 'dark' | 'forest' | 'neutral'}} options
  * @returns {Promise<string[]>} 与入参等长、顺序一致的 SVG 字符串数组
  * @throws {Error} 任意图渲染失败时抛出，message 含 1 基序号与原始错误信息
  */
-export async function renderToSvg(diagrams) {
+export async function renderToSvg(diagrams, options = {}) {
   ensureInitialized();
+  const { theme = 'default' } = options;
   const svgs = [];
   for (const code of diagrams) {
-    counter += 1;
     try {
-      const { svg } = await mermaid.render(`m2i-${counter}`, code);
+      const svg = await renderOne(code, { theme });
       svgs.push(svg);
     } catch (err) {
-      throw new Error(`第 ${svgs.length + 1} 个图表渲染失败: ${err?.message ?? String(err)}`);
+      throw new Error(`第 ${svgs.length + 1} 个图表渲染失败：${err?.message ?? String(err)}`);
     }
   }
   return svgs;
+}
+
+/**
+ * 将 SVG 字符串光栅化为 PNG Buffer。
+ * @param {string} svg SVG 字符串
+ * @param {{ scale?: number, background?: string }} options
+ *        scale: 缩放倍数（1=low, 2=mid, 3=high, 4=max）；background: 背景色（'white' | 'transparent'）
+ * @returns {Promise<Buffer>} PNG Buffer
+ */
+export async function rasterizeSvg(svg, options = {}) {
+  const { Resvg } = await import('@resvg/resvg-js');
+  const scale = options.scale ?? 2;
+  const background = options.background ?? 'transparent';
+  const resvg = new Resvg(svg, {
+    fitTo: { mode: 'zoom', value: scale },
+    font: { loadSystemFonts: true, defaultFontFamily: 'Noto Sans CJK SC' },
+    background,
+  });
+  return resvg.render().asPng();
 }

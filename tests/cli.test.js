@@ -28,9 +28,9 @@ describe('mermaid2img CLI', () => {
 
     const { stdout } = await execFileAsync('node', [CLI, mdPath]);
 
-    expect(stdout).toContain('README.md');
-    expect(stdout).toContain('1 张图片');
-    expect(stdout).toContain('完成');
+    expect(stdout).toMatch(/已生成 1 张/);
+    expect(stdout).toMatch(/SVG 图片/);
+    expect(stdout).toMatch(/完成/);
     const svg = await readFile(path.join(dir, 'images', 'README', 'diagram-1.svg'), 'utf8');
     expect(svg).toContain('<svg');
     expect(await readFile(mdPath, 'utf8')).toBe(MD);
